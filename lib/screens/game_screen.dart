@@ -271,7 +271,7 @@ class _GameScreenState extends State<GameScreen> {
                     // terminaba empujada fuera de la pantalla (justo
                     // lo que reportó el usuario).
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 16, 0),
+                      padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
                       child: _VerticalProblem(
                         problem: _problem,
                         stepIndex: _stepIndex,
@@ -289,7 +289,7 @@ class _GameScreenState extends State<GameScreen> {
                         child: Center(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              vertical: 12,
+                              vertical: 4,
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -300,14 +300,14 @@ class _GameScreenState extends State<GameScreen> {
                                   '${_labelFor(currentStep)}',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.textMuted,
                                   ),
                                 ),
-                                const SizedBox(height: 10),
+                                const SizedBox(height: 4),
                                 SizedBox(
-                                  width: 200,
+                                  width: 150,
                                   child: TextField(
                                     controller: _controller,
                                     focusNode: _focusNode,
@@ -323,20 +323,25 @@ class _GameScreenState extends State<GameScreen> {
                                       ),
                                     ],
                                     style: const TextStyle(
-                                      fontSize: 36,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.primaryBlueDark,
                                     ),
                                     decoration: const InputDecoration(
                                       counterText: '',
                                       hintText: '?',
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: 6,
+                                        horizontal: 10,
+                                      ),
                                     ),
                                     onSubmitted: _submit,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 4),
                                 SizedBox(
-                                  height: 32,
+                                  height: 18,
                                   child: _feedback == _Feedback.none
                                       ? const SizedBox.shrink()
                                       : Text(
@@ -346,7 +351,7 @@ class _GameScreenState extends State<GameScreen> {
                                                   '(era ${currentStep.expectedValue})',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: 18,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.w800,
                                             color:
                                                 _feedback == _Feedback.correct
@@ -357,14 +362,43 @@ class _GameScreenState extends State<GameScreen> {
                                 ),
                                 if (_feedback ==
                                     _Feedback.incorrect) ...<Widget>[
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 4),
                                   SizedBox(
-                                    width: 260,
-                                    child: PrimaryButton(
-                                      label: 'REINICIAR',
-                                      icon: Icons.refresh_rounded,
-                                      backgroundColor: AppColors.errorRed,
-                                      onPressed: _onRestartPressed,
+                                    width: 170,
+                                    height: 40,
+                                    child: Theme(
+                                      data: Theme.of(context).copyWith(
+                                        elevatedButtonTheme:
+                                            ElevatedButtonThemeData(
+                                          style: ElevatedButton.styleFrom(
+                                            minimumSize: const Size(
+                                              double.infinity,
+                                              40,
+                                            ),
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 6,
+                                            ),
+                                            textStyle: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 0.3,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                            ),
+                                            elevation: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      child: PrimaryButton(
+                                        label: 'REINICIAR',
+                                        icon: Icons.refresh_rounded,
+                                        backgroundColor: AppColors.errorRed,
+                                        onPressed: _onRestartPressed,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -504,10 +538,10 @@ class _VerticalProblem extends StatelessWidget {
   final _Feedback feedback;
   final String? enteredText;
 
-  static const double _cellWidth = 26;
-  static const double _operatorSlotWidth = 26;
-  static const double _fontSize = 30;
-  static const double _carryFontSize = 15;
+  static const double _cellWidth = 13;
+  static const double _operatorSlotWidth = 13;
+  static const double _fontSize = 13;
+  static const double _carryFontSize = 7;
 
   int get _totalWidth {
     int width = 2; // factor1 siempre tiene 2 cifras.
@@ -605,7 +639,7 @@ class _VerticalProblem extends StatelessWidget {
   }) {
     final double size = fontSize ?? _fontSize;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
+      padding: EdgeInsets.zero,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -642,8 +676,8 @@ class _VerticalProblem extends StatelessWidget {
 
   Widget _divider() {
     return Container(
-      height: 3,
-      margin: const EdgeInsets.symmetric(vertical: 5),
+      height: 1,
+      margin: const EdgeInsets.symmetric(vertical: 1),
       color: AppColors.textDark,
     );
   }
@@ -715,15 +749,15 @@ class _VerticalProblem extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            blurRadius: 6,
+            offset: Offset(0, 2),
           ),
         ],
       ),

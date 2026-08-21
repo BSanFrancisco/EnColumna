@@ -255,91 +255,105 @@ class _GameScreenState extends State<GameScreen> {
                 record: _record,
                 onClose: _onExitPressed,
               ),
+              // La cuenta queda SIEMPRE visible, fija arriba, fuera de
+              // la zona que se achica/desplaza cuando aparece el
+              // teclado en el celular: si estuviera adentro de esa
+              // zona, al abrirse el teclado terminaba empujada fuera
+              // de la pantalla (justo lo que reportó el usuario).
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: _VerticalProblem(
+                  problem: _problem,
+                  stepIndex: _stepIndex,
+                  feedback: _feedback,
+                  enteredText: _lastEnteredText,
+                ),
+              ),
+              // Solo esta zona de abajo (cartel + input + feedback +
+              // botón) se ajusta y hace scroll cuando el teclado se
+              // despliega; como la cuenta ya no vive acá adentro, no
+              // hay riesgo de que desaparezca de la vista.
               Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        _VerticalProblem(
-                          problem: _problem,
-                          stepIndex: _stepIndex,
-                          feedback: _feedback,
-                          enteredText: _lastEnteredText,
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Paso ${_stepIndex + 1} de '
-                          '${_problem.steps.length}: ${_labelFor(currentStep)}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: 200,
-                          child: TextField(
-                            controller: _controller,
-                            focusNode: _focusNode,
-                            autofocus: true,
-                            enabled: !_locked,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.done,
+                child: SingleChildScrollView(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            'Paso ${_stepIndex + 1} de '
+                            '${_problem.steps.length}: ${_labelFor(currentStep)}',
                             textAlign: TextAlign.center,
-                            inputFormatters: <TextInputFormatter>[
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(
-                                _maxLengthFor(currentStep.kind),
-                              ),
-                            ],
                             style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primaryBlueDark,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textMuted,
                             ),
-                            decoration: const InputDecoration(
-                              counterText: '',
-                              hintText: '?',
-                            ),
-                            onSubmitted: _submit,
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          height: 32,
-                          child: _feedback == _Feedback.none
-                              ? const SizedBox.shrink()
-                              : Text(
-                                  _feedback == _Feedback.correct
-                                      ? '¡Correcto! 😊'
-                                      : 'Incorrecto 😅 '
-                                          '(era ${currentStep.expectedValue})',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: _feedback == _Feedback.correct
-                                        ? AppColors.leafGreenDark
-                                        : AppColors.errorRed,
-                                  ),
-                                ),
-                        ),
-                        if (_feedback == _Feedback.incorrect) ...<Widget>[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           SizedBox(
-                            width: 260,
-                            child: PrimaryButton(
-                              label: 'REINICIAR',
-                              icon: Icons.refresh_rounded,
-                              backgroundColor: AppColors.errorRed,
-                              onPressed: _onRestartPressed,
+                            width: 200,
+                            child: TextField(
+                              controller: _controller,
+                              focusNode: _focusNode,
+                              autofocus: true,
+                              enabled: !_locked,
+                              keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.done,
+                              textAlign: TextAlign.center,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(
+                                  _maxLengthFor(currentStep.kind),
+                                ),
+                              ],
+                              style: const TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primaryBlueDark,
+                              ),
+                              decoration: const InputDecoration(
+                                counterText: '',
+                                hintText: '?',
+                              ),
+                              onSubmitted: _submit,
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 32,
+                            child: _feedback == _Feedback.none
+                                ? const SizedBox.shrink()
+                                : Text(
+                                    _feedback == _Feedback.correct
+                                        ? '¡Correcto! 😊'
+                                        : 'Incorrecto 😅 '
+                                            '(era ${currentStep.expectedValue})',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: _feedback == _Feedback.correct
+                                          ? AppColors.leafGreenDark
+                                          : AppColors.errorRed,
+                                    ),
+                                  ),
+                          ),
+                          if (_feedback == _Feedback.incorrect) ...<Widget>[
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: 260,
+                              child: PrimaryButton(
+                                label: 'REINICIAR',
+                                icon: Icons.refresh_rounded,
+                                backgroundColor: AppColors.errorRed,
+                                onPressed: _onRestartPressed,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),

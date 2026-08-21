@@ -21,9 +21,18 @@ enum _Feedback { none, correct, incorrect }
 /// El récord (racha más larga lograda) se guarda por separado para
 /// cada dificultad.
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, required this.difficulty});
+  const GameScreen({
+    super.key,
+    required this.difficulty,
+    required this.selectedTables,
+  });
 
   final Difficulty difficulty;
+
+  /// Las tablas que el usuario eligió practicar en la pantalla
+  /// principal (ver [TableSelection]). Cada cuenta que se genera
+  /// respeta esta selección, ver [Problem.random].
+  final Set<int> selectedTables;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -48,7 +57,11 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    _problem = Problem.random(widget.difficulty, _random);
+    _problem = Problem.random(
+      widget.difficulty,
+      _random,
+      selectedTables: widget.selectedTables,
+    );
     _loadRecord();
     _refocus();
   }
@@ -72,7 +85,11 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _startNewProblem() {
-    _problem = Problem.random(widget.difficulty, _random);
+    _problem = Problem.random(
+      widget.difficulty,
+      _random,
+      selectedTables: widget.selectedTables,
+    );
     _stepIndex = 0;
     _feedback = _Feedback.none;
     _lastEnteredText = null;
@@ -300,7 +317,7 @@ class _GameScreenState extends State<GameScreen> {
                                   '${_labelFor(currentStep)}',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.textMuted,
                                   ),
@@ -538,10 +555,10 @@ class _VerticalProblem extends StatelessWidget {
   final _Feedback feedback;
   final String? enteredText;
 
-  static const double _cellWidth = 18;
-  static const double _operatorSlotWidth = 18;
-  static const double _fontSize = 18;
-  static const double _carryFontSize = 10;
+  static const double _cellWidth = 27;
+  static const double _operatorSlotWidth = 27;
+  static const double _fontSize = 27;
+  static const double _carryFontSize = 15;
 
   int get _totalWidth {
     int width = 2; // factor1 siempre tiene 2 cifras.

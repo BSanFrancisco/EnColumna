@@ -132,10 +132,66 @@ class Problem {
 
   /// Genera una cuenta nueva al azar. El primer factor siempre es de
   /// 2 cifras (10 a 99); el segundo depende de la dificultad elegida.
-  factory Problem.random(Difficulty difficulty, Random random) {
-    final int factor1 = 10 + random.nextInt(90); // 10..99
-    final int factor2 = difficulty.randomSecondFactor(random);
+  ///
+  /// [selectedTables] son las tablas que el usuario eligió practicar
+  /// (ver pantalla principal): la cuenta generada garantiza que TODAS
+  /// las multiplicaciones de un solo dígito que van a aparecer al
+  /// resolverla paso a paso (cada cifra de factor1 por cada cifra de
+  /// factor2) tengan al menos una de las dos cifras dentro de
+  /// [selectedTables]. Así el usuario nunca se topa, en medio de una
+  /// cuenta, con un cálculo chico de una tabla que no eligió
+  /// practicar.
+  factory Problem.random(
+    Difficulty difficulty,
+    Random random, {
+    required Set<int> selectedTables,
+  }) {
+    // Encontrar una combinación válida es aritmética simple y
+    // normalmente se logra en pocos intentos, pero por las dudas hay
+    // un límite: si la selección de tablas hiciera imposible cumplir
+    // la restricción (por ejemplo, si quedó seleccionada solo la
+    // tabla del 10, que nunca coincide con ninguna cifra de 0 a 9),
+    // se usa igual la última combinación generada, para no trabar el
+    // juego esperando algo que nunca va a pasar.
+    const int maxAttempts = 3000;
+    int factor1 = 10 + random.nextInt(90);
+    int factor2 = difficulty.randomSecondFactor(random);
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      if (_isAllowedByTables(factor1, factor2, difficulty, selectedTables)) {
+        break;
+      }
+      factor1 = 10 + random.nextInt(90); // 10..99
+      factor2 = difficulty.randomSecondFactor(random);
+    }
     return Problem(factor1: factor1, factor2: factor2, difficulty: difficulty);
+  }
+
+  /// Verdadero si, al resolver esta cuenta, cada multiplicación de un
+  /// solo dígito que hay que hacer (una cifra de [factor1] por una
+  /// cifra de [factor2]) tiene al menos una de las dos cifras dentro
+  /// de [selectedTables] — exactamente lo mismo que evalúa a mano
+  /// alguien decidiendo si "sabe" ese cálculo chico.
+  static bool _isAllowedByTables(
+    int factor1,
+    int factor2,
+    Difficulty difficulty,
+    Set<int> selectedTables,
+  ) {
+    final int tensDigit = factor1 ~/ 10;
+    final int unitsDigit = factor1 % 10;
+    final List<int> multiplierDigits = difficulty == Difficulty.oneDigit
+        ? <int>[factor2]
+        : <int>[factor2 % 10, factor2 ~/ 10];
+    for (final int d in multiplierDigits) {
+      final bool unitsOk =
+          selectedTables.contains(unitsDigit) || selectedTables.contains(d);
+      final bool tensOk =
+          selectedTables.contains(tensDigit) || selectedTables.contains(d);
+      if (!unitsOk || !tensOk) {
+        return false;
+      }
+    }
+    return true;
   }
 
   final int factor1;

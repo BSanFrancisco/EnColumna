@@ -248,114 +248,133 @@ class _GameScreenState extends State<GameScreen> {
       canPop: false,
       child: Scaffold(
         body: AppBackground(
-          child: Column(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              _StreakBar(
+              // La barra de racha/récord/salir ahora va vertical, en
+              // una franja angosta a la izquierda: así libera todo el
+              // ancho de arriba para que la cuenta pueda subir más y
+              // quede más lugar disponible cuando el teclado del
+              // celular se despliega.
+              _SideBar(
                 streak: _streak,
                 record: _record,
                 onClose: _onExitPressed,
               ),
-              // La cuenta queda SIEMPRE visible, fija arriba, fuera de
-              // la zona que se achica/desplaza cuando aparece el
-              // teclado en el celular: si estuviera adentro de esa
-              // zona, al abrirse el teclado terminaba empujada fuera
-              // de la pantalla (justo lo que reportó el usuario).
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: _VerticalProblem(
-                  problem: _problem,
-                  stepIndex: _stepIndex,
-                  feedback: _feedback,
-                  enteredText: _lastEnteredText,
-                ),
-              ),
-              // Solo esta zona de abajo (cartel + input + feedback +
-              // botón) se ajusta y hace scroll cuando el teclado se
-              // despliega; como la cuenta ya no vive acá adentro, no
-              // hay riesgo de que desaparezca de la vista.
               Expanded(
-                child: SingleChildScrollView(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Text(
-                            'Paso ${_stepIndex + 1} de '
-                            '${_problem.steps.length}: ${_labelFor(currentStep)}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: 200,
-                            child: TextField(
-                              controller: _controller,
-                              focusNode: _focusNode,
-                              autofocus: true,
-                              enabled: !_locked,
-                              keyboardType: TextInputType.number,
-                              textInputAction: TextInputAction.done,
-                              textAlign: TextAlign.center,
-                              inputFormatters: <TextInputFormatter>[
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(
-                                  _maxLengthFor(currentStep.kind),
-                                ),
-                              ],
-                              style: const TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primaryBlueDark,
-                              ),
-                              decoration: const InputDecoration(
-                                counterText: '',
-                                hintText: '?',
-                              ),
-                              onSubmitted: _submit,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: 32,
-                            child: _feedback == _Feedback.none
-                                ? const SizedBox.shrink()
-                                : Text(
-                                    _feedback == _Feedback.correct
-                                        ? '¡Correcto! 😊'
-                                        : 'Incorrecto 😅 '
-                                            '(era ${currentStep.expectedValue})',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                      color: _feedback == _Feedback.correct
-                                          ? AppColors.leafGreenDark
-                                          : AppColors.errorRed,
-                                    ),
-                                  ),
-                          ),
-                          if (_feedback == _Feedback.incorrect) ...<Widget>[
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: 260,
-                              child: PrimaryButton(
-                                label: 'REINICIAR',
-                                icon: Icons.refresh_rounded,
-                                backgroundColor: AppColors.errorRed,
-                                onPressed: _onRestartPressed,
-                              ),
-                            ),
-                          ],
-                        ],
+                child: Column(
+                  children: <Widget>[
+                    // La cuenta queda SIEMPRE visible, fija arriba,
+                    // fuera de la zona que se achica/desplaza cuando
+                    // aparece el teclado en el celular: si estuviera
+                    // adentro de esa zona, al abrirse el teclado
+                    // terminaba empujada fuera de la pantalla (justo
+                    // lo que reportó el usuario).
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 16, 0),
+                      child: _VerticalProblem(
+                        problem: _problem,
+                        stepIndex: _stepIndex,
+                        feedback: _feedback,
+                        enteredText: _lastEnteredText,
                       ),
                     ),
-                  ),
+                    // Solo esta zona de abajo (cartel + input +
+                    // feedback + botón) se ajusta y hace scroll cuando
+                    // el teclado se despliega; como la cuenta ya no
+                    // vive acá adentro, no hay riesgo de que
+                    // desaparezca de la vista.
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Text(
+                                  'Paso ${_stepIndex + 1} de '
+                                  '${_problem.steps.length}: '
+                                  '${_labelFor(currentStep)}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: 200,
+                                  child: TextField(
+                                    controller: _controller,
+                                    focusNode: _focusNode,
+                                    autofocus: true,
+                                    enabled: !_locked,
+                                    keyboardType: TextInputType.number,
+                                    textInputAction: TextInputAction.done,
+                                    textAlign: TextAlign.center,
+                                    inputFormatters: <TextInputFormatter>[
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(
+                                        _maxLengthFor(currentStep.kind),
+                                      ),
+                                    ],
+                                    style: const TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primaryBlueDark,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      counterText: '',
+                                      hintText: '?',
+                                    ),
+                                    onSubmitted: _submit,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  height: 32,
+                                  child: _feedback == _Feedback.none
+                                      ? const SizedBox.shrink()
+                                      : Text(
+                                          _feedback == _Feedback.correct
+                                              ? '¡Correcto! 😊'
+                                              : 'Incorrecto 😅 '
+                                                  '(era ${currentStep.expectedValue})',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w800,
+                                            color:
+                                                _feedback == _Feedback.correct
+                                                    ? AppColors.leafGreenDark
+                                                    : AppColors.errorRed,
+                                          ),
+                                        ),
+                                ),
+                                if (_feedback ==
+                                    _Feedback.incorrect) ...<Widget>[
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: 260,
+                                    child: PrimaryButton(
+                                      label: 'REINICIAR',
+                                      icon: Icons.refresh_rounded,
+                                      backgroundColor: AppColors.errorRed,
+                                      onPressed: _onRestartPressed,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -366,10 +385,13 @@ class _GameScreenState extends State<GameScreen> {
   }
 }
 
-/// Barra superior: racha actual, récord de la dificultad elegida, y
-/// botón para salir (con confirmación, ver [GameScreen._onExitPressed]).
-class _StreakBar extends StatelessWidget {
-  const _StreakBar({
+/// Franja lateral izquierda, angosta: racha actual, récord de la
+/// dificultad elegida, y botón para salir (con confirmación, ver
+/// [GameScreen._onExitPressed]). Va vertical (en vez de una barra
+/// horizontal arriba de todo) para dejarle más alto disponible a la
+/// cuenta, sobre todo con el teclado del celular abierto.
+class _SideBar extends StatelessWidget {
+  const _SideBar({
     required this.streak,
     required this.record,
     required this.onClose,
@@ -379,51 +401,47 @@ class _StreakBar extends StatelessWidget {
   final int record;
   final VoidCallback onClose;
 
+  static const double _width = 58;
+
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: _width,
       padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: const BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.primaryBlue, width: 3),
+          right: BorderSide(color: AppColors.primaryBlue, width: 3),
         ),
       ),
-      child: Row(
+      child: Column(
         children: <Widget>[
           IconButton(
             onPressed: onClose,
-            icon: const Icon(Icons.close_rounded, size: 26),
+            icon: const Icon(Icons.close_rounded, size: 24),
             color: AppColors.textMuted,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           ),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                _StatChip(
-                  icon: Icons.local_fire_department_rounded,
-                  label: '$streak',
-                  color: AppColors.emberOrange,
-                ),
-                const SizedBox(width: 20),
-                _StatChip(
-                  icon: Icons.emoji_events_rounded,
-                  label: '$record',
-                  color: AppColors.trophyGold,
-                ),
-              ],
-            ),
+          const SizedBox(height: 14),
+          _VerticalStatChip(
+            icon: Icons.local_fire_department_rounded,
+            label: '$streak',
+            color: AppColors.emberOrange,
           ),
-          // Espaciador para compensar el ancho del botón de cerrar y
-          // que los chips queden centrados de verdad en la barra.
-          const SizedBox(width: 48),
+          const SizedBox(height: 14),
+          _VerticalStatChip(
+            icon: Icons.emoji_events_rounded,
+            label: '$record',
+            color: AppColors.trophyGold,
+          ),
         ],
       ),
     );
   }
 }
 
-class _StatChip extends StatelessWidget {
-  const _StatChip({
+class _VerticalStatChip extends StatelessWidget {
+  const _VerticalStatChip({
     required this.icon,
     required this.label,
     required this.color,
@@ -435,15 +453,15 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(icon, color: color, size: 24),
-        const SizedBox(width: 6),
+        Icon(icon, color: color, size: 20),
+        const SizedBox(height: 2),
         Text(
           label,
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 15,
             fontWeight: FontWeight.w800,
             color: color,
           ),
@@ -697,7 +715,7 @@ class _VerticalProblem extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(24),

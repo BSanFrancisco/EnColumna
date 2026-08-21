@@ -1,0 +1,45 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:label="Multiplicaciones en Columna"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Especifica un tema de Android para dibujar mientras se
+                 muestra la ventana de arranque de Flutter. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- No usamos internet: la app funciona 100% offline y guarda
+             todo localmente en el dispositivo. -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+        <!-- Desactiva Impeller (el renderizador nuevo de Flutter) y
+             usa el anterior (Skia/OpenGLES) en su lugar, de arranque:
+             en Tablas de Multiplicar esto hizo falta para que algunos
+             emuladores (imágenes nuevas/experimentales como
+             "gphone16k") no se quedaran trabados en el ícono de
+             arranque. En un celular real no hace falta, pero no rompe
+             nada dejarlo puesto. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
+    </application>
+
+    <!-- No se declara el permiso de INTERNET a propósito: la app no
+         requiere conexión de red. -->
+</manifest>

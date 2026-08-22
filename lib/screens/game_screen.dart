@@ -340,16 +340,28 @@ class _GameScreenState extends State<GameScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                Text(
-                                  widget.showHints
-                                      ? 'Paso ${_stepIndex + 1}: '
-                                          '${_labelFor(currentStep)}'
-                                      : 'Paso ${_stepIndex + 1}',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textMuted,
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      widget.showHints
+                                          ? 'Paso ${_stepIndex + 1}: '
+                                              '${_labelFor(currentStep)}'
+                                          : 'Paso ${_stepIndex + 1}',
+                                      // Nunca 2 renglones: si no entra
+                                      // en uno solo, se achica el
+                                      // texto (FittedBox) en vez de
+                                      // pasar a la línea siguiente.
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 4),

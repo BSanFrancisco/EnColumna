@@ -718,7 +718,7 @@ class _VerticalProblem extends StatelessWidget {
   }) {
     final double size = fontSize ?? _fontSize;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -755,8 +755,8 @@ class _VerticalProblem extends StatelessWidget {
 
   Widget _divider() {
     return Container(
-      height: 3,
-      margin: const EdgeInsets.symmetric(vertical: 5),
+      height: 2,
+      margin: const EdgeInsets.symmetric(vertical: 4),
       color: AppColors.textDark,
     );
   }
@@ -842,7 +842,7 @@ class _VerticalProblem extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
         borderRadius: BorderRadius.circular(18),

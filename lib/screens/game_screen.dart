@@ -587,10 +587,10 @@ class _VerticalProblem extends StatelessWidget {
   final _Feedback feedback;
   final String? enteredText;
 
-  static const double _cellWidth = 27;
-  static const double _operatorSlotWidth = 27;
-  static const double _fontSize = 27;
-  static const double _carryFontSize = 15;
+  static const double _cellWidth = 24.3;
+  static const double _operatorSlotWidth = 24.3;
+  static const double _fontSize = 24.3;
+  static const double _carryFontSize = 13.5;
 
   int get _totalWidth {
     int width = 2; // factor1 siempre tiene 2 cifras.
@@ -718,7 +718,7 @@ class _VerticalProblem extends StatelessWidget {
   }) {
     final double size = fontSize ?? _fontSize;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 2.7),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -755,8 +755,8 @@ class _VerticalProblem extends StatelessWidget {
 
   Widget _divider() {
     return Container(
-      height: 2,
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      height: 1.8,
+      margin: const EdgeInsets.symmetric(vertical: 3.6),
       color: AppColors.textDark,
     );
   }
@@ -842,15 +842,15 @@ class _VerticalProblem extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 9.9, vertical: 8.1),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16.2),
         boxShadow: const <BoxShadow>[
           BoxShadow(
             color: Color(0x14000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
+            blurRadius: 7.2,
+            offset: Offset(0, 2.7),
           ),
         ],
       ),

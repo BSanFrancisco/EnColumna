@@ -342,11 +342,9 @@ class _GameScreenState extends State<GameScreen> {
                               children: <Widget>[
                                 Text(
                                   widget.showHints
-                                      ? 'Paso ${_stepIndex + 1} de '
-                                          '${_problem.steps.length}: '
+                                      ? 'Paso ${_stepIndex + 1}: '
                                           '${_labelFor(currentStep)}'
-                                      : 'Paso ${_stepIndex + 1} de '
-                                          '${_problem.steps.length}',
+                                      : 'Paso ${_stepIndex + 1}',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     fontSize: 17,

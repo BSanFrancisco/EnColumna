@@ -80093,29 +80093,26 @@ this.r.l()
 this.aJ()},
 J(a){var s,r,q,p,o,n,m,l,k,j,i=this,h=null,g=i.w
 g===$&&A.a()
-s=g.f
-r=i.x
-q=s[r]
-p=i.y
-o=i.z
-n=i.Q
-m=i.as
-l=i.a.e
-k=""+(r+1)
-s=""+s.length
-s=A.dZ(l?"Paso "+k+" de "+s+": "+i.a7R(q):"Paso "+k+" de "+s,h,h,h,B.QF,B.ay,h)
-k=i.at
-j=A.d([$.axb(),new A.In(i.a8b(q.a),h)],t.VS)
-l=A.hb(new A.A2(i.f,i.r,B.F_,B.OY,B.yO,B.yR,B.ay,!0,B.O6,B.O7,i.gacj(),j,!k,!0,h),h,150)
+s=i.x
+r=g.f[s]
+q=i.y
+p=i.z
+o=i.Q
+n=i.as
+m=""+(s+1)
+m=A.dZ(i.a.e?"Paso "+m+": "+i.a7R(r):"Paso "+m,h,h,h,B.QF,B.ay,h)
+l=i.at
+k=A.d([$.axb(),new A.In(i.a8b(r.a),h)],t.VS)
+l=A.hb(new A.A2(i.f,i.r,B.F_,B.OY,B.yO,B.yR,B.ay,!0,B.O6,B.O7,i.gacj(),k,!l,!0,h),h,150)
 k=i.Q
 if(k===B.fa)k=B.ad
 else{k=k===B.cZ
-j=k?"\xa1Correcto! \ud83d\ude0a":"Incorrecto \ud83d\ude05 (era "+q.d+")"
+j=k?"\xa1Correcto! \ud83d\ude0a":"Incorrecto \ud83d\ude05 (era "+r.d+")"
 j=A.dZ(j,h,h,h,A.er(h,h,k?B.da:B.cx,h,h,h,h,h,h,h,h,12,h,h,B.bn,h,h,!0,h,h,h,h,h,h,h,h),B.ay,h)
 k=j}j=t.E
-k=A.d([s,B.hQ,l,B.hQ,A.hb(k,18,h)],j)
+k=A.d([m,B.hQ,l,B.hQ,A.hb(k,18,h)],j)
 if(i.Q===B.zl)B.b.O(k,A.d([B.hQ,A.hb(new A.p3(A.a2(a).afH(new A.nl(A.ant(h,h,h,h,h,h,2,h,h,h,h,B.NT,B.E3,h,new A.co(A.ei(14),B.q),h,h,h,B.Si,h))),new A.Jt("REINICIAR",i.ga93(),B.ES,B.cx,h),h),40,170)],j))
-return A.at3(!1,A.atv(new A.v0(A.yY(A.d([new A.Sc(p,o,i.ga8Q(),h),A.ZH(A.ji(A.d([new A.cb(B.El,new A.TE(g,r,n,m,h),h),A.ZH(A.atH(A.pY(new A.cb(B.E_,A.ji(k,B.aB,B.bG),h),h,h),h))],j),B.aB,B.cd))],j),B.cz,B.c_,B.cd),h)),h,t.z)}}
+return A.at3(!1,A.atv(new A.v0(A.yY(A.d([new A.Sc(q,p,i.ga8Q(),h),A.ZH(A.ji(A.d([new A.cb(B.El,new A.TE(g,s,o,n,h),h),A.ZH(A.atH(A.pY(new A.cb(B.E_,A.ji(k,B.aB,B.bG),h),h,h),h))],j),B.aB,B.cd))],j),B.cz,B.c_,B.cd),h)),h,t.z)}}
 A.afl.prototype={
 $0(){this.a.z=this.b},
 $S:0}

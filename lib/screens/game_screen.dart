@@ -25,6 +25,7 @@ class GameScreen extends StatefulWidget {
     super.key,
     required this.difficulty,
     required this.selectedTables,
+    required this.showHints,
   });
 
   final Difficulty difficulty;
@@ -33,6 +34,12 @@ class GameScreen extends StatefulWidget {
   /// principal (ver [TableSelection]). Cada cuenta que se genera
   /// respeta esta selección, ver [Problem.random].
   final Set<int> selectedTables;
+
+  /// Si es falso, no se muestra el cartel que indica qué números
+  /// tocan multiplicar o sumar en cada paso (elegido en la pantalla
+  /// principal). El progreso "Paso X de N" se sigue mostrando: no es
+  /// parte de la ayuda, solo indica cuánto falta.
+  final bool showHints;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -106,9 +113,27 @@ class _GameScreenState extends State<GameScreen> {
         return 2;
       case StepKind.rowTens:
         return 2;
-      case StepKind.finalSum:
-        return 4;
+      case StepKind.sumColumn:
+        // Acá también se escribe el resultado COMPLETO de la columna
+        // (ej. "12"), no solo el dígito que queda; el sistema separa
+        // la llevada solo. Como mucho son 2 cifras (9 + 9 + 1 = 19).
+        return 2;
     }
+  }
+
+  static const List<String> _columnNames = <String>[
+    'las unidades',
+    'las decenas',
+    'las centenas',
+    'la unidad de mil',
+    'la decena de mil',
+  ];
+
+  String _columnName(int columnIndex) {
+    if (columnIndex >= 0 && columnIndex < _columnNames.length) {
+      return _columnNames[columnIndex];
+    }
+    return 'la columna ${columnIndex + 1}';
   }
 
   String _labelFor(ProblemStep step) {
@@ -121,8 +146,12 @@ class _GameScreenState extends State<GameScreen> {
         final String carryText = row.carry > 0 ? ' + ${row.carry}' : '';
         return 'Decenas: ${_problem.factor1 ~/ 10} × '
             '${row.multiplierDigit}$carryText';
-      case StepKind.finalSum:
-        return 'Sumá los dos renglones';
+      case StepKind.sumColumn:
+        final SumColumn column = _problem.sumColumns[step.columnIndex];
+        final String carryText =
+            column.carryIn > 0 ? ' + ${column.carryIn} (que te llevás)' : '';
+        return 'Sumá ${_columnName(column.columnIndex)}: '
+            '${column.digit0} + ${column.digit1}$carryText';
     }
   }
 
@@ -312,9 +341,12 @@ class _GameScreenState extends State<GameScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
                                 Text(
-                                  'Paso ${_stepIndex + 1} de '
-                                  '${_problem.steps.length}: '
-                                  '${_labelFor(currentStep)}',
+                                  widget.showHints
+                                      ? 'Paso ${_stepIndex + 1} de '
+                                          '${_problem.steps.length}: '
+                                          '${_labelFor(currentStep)}'
+                                      : 'Paso ${_stepIndex + 1} de '
+                                          '${_problem.steps.length}',
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     fontSize: 17,
@@ -649,6 +681,36 @@ class _VerticalProblem extends StatelessWidget {
     return cells;
   }
 
+  /// Arma la grilla de celdas de la fila de la suma final, columna
+  /// por columna (unidades, decenas, centenas, ...), según cuánto se
+  /// lleva completado hasta ahora. El mismo mecanismo que
+  /// [_rowCells]: se ingresa el resultado COMPLETO de cada columna,
+  /// pero acá solo se muestra el dígito ya separado de la llevada.
+  List<_Cell> _sumRowCells(int width) {
+    final List<_Cell> cells = _emptyCells(width);
+    if (problem.sumColumns.isEmpty) {
+      return cells;
+    }
+    final int sumStartIndex = problem.steps.length - problem.sumColumns.length;
+    for (int i = 0; i < problem.sumColumns.length; i++) {
+      final int globalIndex = sumStartIndex + i;
+      final int col = width - 1 - i;
+      if (col < 0) {
+        continue;
+      }
+      final bool confirmedOrJustCorrect = stepIndex > globalIndex ||
+          (stepIndex == globalIndex && feedback == _Feedback.correct);
+      if (confirmedOrJustCorrect) {
+        final int digit = problem.sumColumns[i].writtenDigit;
+        cells[col] = _Cell('$digit', AppColors.leafGreenDark);
+      }
+      // Si la respuesta fue incorrecta, no sabemos qué dígito separar
+      // de un cálculo mal hecho: la celda queda vacía, y el cartel de
+      // abajo ya explica cuál era la suma correcta de esa columna.
+    }
+    return cells;
+  }
+
   Widget _rowWidget(
     List<_Cell> cells, {
     String operatorText = '',
@@ -747,22 +809,36 @@ class _VerticalProblem extends StatelessWidget {
     }
 
     if (isTwoDigits) {
-      rows.add(_divider());
-      final int sumGlobalIndex = problem.steps.length - 1;
-      List<_Cell> sumCells = _emptyCells(width);
-      if (stepIndex > sumGlobalIndex) {
-        sumCells = _numberCells(
-          width,
-          '${problem.finalAnswer}',
-          AppColors.leafGreenDark,
-        );
-      } else if (stepIndex == sumGlobalIndex && feedback != _Feedback.none) {
-        final Color color = feedback == _Feedback.correct
-            ? AppColors.leafGreenDark
-            : AppColors.errorRed;
-        sumCells = _numberCells(width, enteredText ?? '', color);
+      // La llevada de la suma final se muestra arriba de la columna
+      // donde "aterriza", con el mismo criterio que la llevada de la
+      // multiplicación: aparece apenas se contesta bien esa columna
+      // (para verse al toque junto con el dígito separado) y sigue
+      // mostrándose mientras se resuelve la columna siguiente.
+      int? sumCarryColumnIndex;
+      int sumCarryValue = 0;
+      if (current.kind == StepKind.sumColumn) {
+        final SumColumn column = problem.sumColumns[current.columnIndex];
+        if (feedback == _Feedback.correct) {
+          if (column.carryOut > 0) {
+            sumCarryColumnIndex = column.columnIndex + 1;
+            sumCarryValue = column.carryOut;
+          }
+        } else if (column.carryIn > 0) {
+          sumCarryColumnIndex = column.columnIndex;
+          sumCarryValue = column.carryIn;
+        }
       }
-      rows.add(_rowWidget(sumCells));
+      final List<_Cell> sumCarryCells = _emptyCells(width);
+      if (sumCarryColumnIndex != null) {
+        final int carryCol = width - 1 - sumCarryColumnIndex;
+        if (carryCol >= 0) {
+          sumCarryCells[carryCol] = _Cell('$sumCarryValue', AppColors.errorRed);
+        }
+      }
+
+      rows.add(_divider());
+      rows.add(_rowWidget(sumCarryCells, fontSize: _carryFontSize));
+      rows.add(_rowWidget(_sumRowCells(width)));
     }
 
     return Container(

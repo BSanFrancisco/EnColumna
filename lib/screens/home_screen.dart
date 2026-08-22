@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/difficulty.dart';
 import '../models/table_selection.dart';
+import '../services/hints_repository.dart';
 import '../services/streak_repository.dart';
 import '../services/table_selection_repository.dart';
 import '../theme/app_colors.dart';
@@ -23,15 +24,18 @@ class _HomeScreenState extends State<HomeScreen> {
   final StreakRepository _streakRepository = StreakRepository();
   final TableSelectionRepository _tableRepository =
       TableSelectionRepository();
+  final HintsRepository _hintsRepository = HintsRepository();
   final Map<Difficulty, int> _records = <Difficulty, int>{};
 
-  Set<int> _selectedTables = TableSelection.defaultSelected();
+  int _maxTable = TableSelection.defaultMaxTable;
+  bool _showHints = true;
 
   @override
   void initState() {
     super.initState();
     _loadRecords();
-    _loadSelectedTables();
+    _loadMaxTable();
+    _loadShowHints();
   }
 
   Future<void> _loadRecords() async {
@@ -49,31 +53,44 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadSelectedTables() async {
-    final Set<int> selected = await _tableRepository.getSelected();
+  Future<void> _loadMaxTable() async {
+    final int maxTable = await _tableRepository.getMaxTable();
     if (!mounted) {
       return;
     }
     setState(() {
-      _selectedTables = selected;
+      _maxTable = maxTable;
     });
   }
 
-  void _onToggleTable(int table) {
+  void _onMaxTableChanged(int? value) {
+    if (value == null) {
+      return;
+    }
     setState(() {
-      if (_selectedTables.contains(table)) {
-        // Siempre tiene que quedar al menos una tabla elegida: si es
-        // la última, no se puede destildar.
-        if (_selectedTables.length > 1) {
-          _selectedTables.remove(table);
-        }
-      } else {
-        _selectedTables.add(table);
-      }
+      _maxTable = value;
     });
     // Se guarda en segundo plano; no hace falta esperarlo para
     // seguir usando la pantalla.
-    _tableRepository.saveSelected(_selectedTables);
+    _tableRepository.saveMaxTable(value);
+  }
+
+  Future<void> _loadShowHints() async {
+    final bool showHints = await _hintsRepository.getShowHints();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _showHints = showHints;
+    });
+  }
+
+  void _onToggleShowHints(bool? value) {
+    final bool newValue = value ?? true;
+    setState(() {
+      _showHints = newValue;
+    });
+    _hintsRepository.saveShowHints(newValue);
   }
 
   void _onPlay(Difficulty difficulty) {
@@ -82,7 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
           MaterialPageRoute<void>(
             builder: (_) => GameScreen(
               difficulty: difficulty,
-              selectedTables: _selectedTables,
+              selectedTables: TableSelection.tablesUpTo(_maxTable),
+              showHints: _showHints,
             ),
           ),
         )
@@ -100,10 +118,10 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const Text(
-                  'MULTIPLICACIONES\nEN COLUMNA',
+                  'MULTIPLICACIONES DE DOS CIFRAS',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: 26,
                     fontWeight: FontWeight.w900,
                     height: 1.05,
                     color: AppColors.textDark,
@@ -111,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  '¿Qué tablas podemos usar?',
+                  '¿Hasta qué tabla podemos usar?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18,
@@ -121,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Las cuentas solo van a usar estas tablas',
+                  'Se van a usar esa tabla y todas las anteriores',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
@@ -130,9 +148,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                _TablesGrid(
-                  selected: _selectedTables,
-                  onToggle: _onToggleTable,
+                _MaxTableDropdown(
+                  value: _maxTable,
+                  onChanged: _onMaxTableChanged,
                 ),
                 const SizedBox(height: 26),
                 const Text(
@@ -143,6 +161,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w600,
                     color: AppColors.textMuted,
                   ),
+                ),
+                const SizedBox(height: 12),
+                _ShowHintsCheckbox(
+                  value: _showHints,
+                  onChanged: _onToggleShowHints,
                 ),
                 const SizedBox(height: 16),
                 _DifficultyCard(
@@ -179,77 +202,96 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Grilla de 3 columnas con las tablas del 2 al 10, cada una como un
-/// botón que se puede tildar o destildar, igual que en Tablas de
-/// Multiplicar.
-class _TablesGrid extends StatelessWidget {
-  const _TablesGrid({required this.selected, required this.onToggle});
+/// Menú desplegable para elegir hasta qué tabla se puede usar (2 al
+/// 10). La tabla elegida y todas las anteriores quedan habilitadas.
+class _MaxTableDropdown extends StatelessWidget {
+  const _MaxTableDropdown({required this.value, required this.onChanged});
 
-  final Set<int> selected;
-  final ValueChanged<int> onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.15,
-      children: TableSelection.all
-          .map(
-            (int table) => _TableToggle(
-              table: table,
-              isSelected: selected.contains(table),
-              onTap: () => onToggle(table),
-            ),
-          )
-          .toList(),
-    );
-  }
-}
-
-class _TableToggle extends StatelessWidget {
-  const _TableToggle({
-    required this.table,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final int table;
-  final bool isSelected;
-  final VoidCallback onTap;
+  final int value;
+  final ValueChanged<int?> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected
-          ? AppColors.cardWhite
-          : AppColors.textMuted.withOpacity(0.12),
-      borderRadius: BorderRadius.circular(18),
-      elevation: isSelected ? 2 : 0,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.primaryBlue
-                  : Colors.transparent,
-              width: 3,
+      color: AppColors.cardWhite,
+      borderRadius: BorderRadius.circular(20),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 4),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<int>(
+            value: value,
+            isExpanded: true,
+            alignment: Alignment.center,
+            borderRadius: BorderRadius.circular(20),
+            icon: const Icon(
+              Icons.expand_more_rounded,
+              color: AppColors.primaryBlue,
             ),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            '$table',
-            style: TextStyle(
-              fontSize: 26,
+            style: const TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: isSelected ? AppColors.primaryBlueDark : AppColors.textMuted,
+              color: AppColors.primaryBlueDark,
             ),
+            items: TableSelection.options
+                .map(
+                  (int table) => DropdownMenuItem<int>(
+                    value: table,
+                    child: Text(
+                      'Tabla del $table',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: onChanged,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Casillero para mostrar u ocultar las ayudas durante el juego (el
+/// cartel que indica qué números tocan multiplicar o sumar en cada
+/// paso). Tildado (por defecto) deja todo tal cual está ahora;
+/// destildado, ese cartel no aparece mientras se resuelve la cuenta.
+class _ShowHintsCheckbox extends StatelessWidget {
+  const _ShowHintsCheckbox({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => onChanged(!value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Checkbox(
+                value: value,
+                onChanged: onChanged,
+                activeColor: AppColors.primaryBlue,
+              ),
+              const SizedBox(width: 4),
+              const Flexible(
+                child: Text(
+                  'Mostrar ayudas (qué números tocan)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

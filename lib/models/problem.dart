@@ -4,10 +4,10 @@ import 'difficulty.dart';
 
 /// Qué representa un paso interactivo: el dígito de las unidades del
 /// renglón (con llevada), el resto del renglón (decenas en adelante,
-/// ya sin más llevada porque no quedan más cifras de factor1), o la
-/// suma final de los dos renglones (solo existe cuando hay 2
-/// renglones, en la dificultad de 2 cifras × 2 cifras).
-enum StepKind { rowUnits, rowTens, finalSum }
+/// ya sin más llevada porque no quedan más cifras de factor1), o una
+/// columna de la suma final de los dos renglones (solo existen
+/// cuando hay 2 renglones, en la dificultad de 2 cifras × 2 cifras).
+enum StepKind { rowUnits, rowTens, sumColumn }
 
 /// Un renglón de la cuenta: multiplicar TODO factor1 (siempre de 2
 /// cifras) por UNA sola cifra de factor2 (unidades o decenas de
@@ -85,32 +85,82 @@ class ProblemRow {
   int get rowValue => (restValue * 10 + unitsDigit) * (shift == 0 ? 1 : 10);
 }
 
+/// Una columna de la suma final (unidades, decenas, centenas, etc.),
+/// sumando la cifra de esa posición en cada uno de los dos renglones
+/// más la llevada que trae de la columna anterior — igual que se
+/// suma a mano, columna por columna. El usuario escribe el resultado
+/// COMPLETO de esa columna (por ejemplo "12"), y el sistema separa
+/// solo el dígito que queda escrito de la llevada hacia la próxima
+/// columna, con el mismo mecanismo que ya se usa en cada renglón.
+class SumColumn {
+  const SumColumn({
+    required this.columnIndex,
+    required this.digit0,
+    required this.digit1,
+    required this.carryIn,
+    required this.rawSum,
+    required this.writtenDigit,
+    required this.carryOut,
+  });
+
+  /// 0 = columna de las unidades, 1 = decenas, 2 = centenas, etc.
+  final int columnIndex;
+
+  /// La cifra en esta columna del primer renglón (rows[0]).
+  final int digit0;
+
+  /// La cifra en esta columna del segundo renglón (rows[1]).
+  final int digit1;
+
+  /// Lo que se trae de la columna anterior (0 si no hay llevada).
+  final int carryIn;
+
+  /// Paso interactivo: lo que hay que escribir es [digit0] + [digit1]
+  /// + [carryIn] completo (por ejemplo 12), no solo el dígito final.
+  final int rawSum;
+
+  /// El dígito que efectivamente queda escrito en esta columna, una
+  /// vez separada la llevada.
+  final int writtenDigit;
+
+  /// Lo que se lleva hacia la próxima columna (0 si no hay llevada).
+  final int carryOut;
+}
+
 /// Un paso interactivo dentro de la cuenta: hay que escribir
 /// [expectedValue] para completarlo.
 class ProblemStep {
   const ProblemStep({
     required this.kind,
-    required this.rowIndex,
+    this.rowIndex = -1,
+    this.columnIndex = -1,
     required this.expectedValue,
   });
 
   final StepKind kind;
 
-  /// A qué renglón pertenece (0 o 1). No se usa para [StepKind.finalSum].
+  /// A qué renglón pertenece (0 o 1). Solo se usa con
+  /// [StepKind.rowUnits] y [StepKind.rowTens].
   final int rowIndex;
+
+  /// A qué columna de la suma pertenece (0 = unidades). Solo se usa
+  /// con [StepKind.sumColumn].
+  final int columnIndex;
 
   final int expectedValue;
 }
 
 /// Una cuenta de multiplicación en columna: los dos factores, sus
-/// renglones, y la lista ordenada de pasos interactivos que hay que
-/// completar para resolverla paso a paso, tal como se hace a mano.
+/// renglones, las columnas de la suma final, y la lista ordenada de
+/// pasos interactivos que hay que completar para resolverla paso a
+/// paso, tal como se hace a mano.
 class Problem {
   Problem._({
     required this.factor1,
     required this.factor2,
     required this.difficulty,
     required this.rows,
+    required this.sumColumns,
     required this.steps,
   });
 
@@ -120,12 +170,14 @@ class Problem {
     required Difficulty difficulty,
   }) {
     final List<ProblemRow> rows = _buildRows(factor1, factor2, difficulty);
-    final List<ProblemStep> steps = _buildSteps(rows);
+    final List<SumColumn> sumColumns = _buildSumColumns(rows);
+    final List<ProblemStep> steps = _buildSteps(rows, sumColumns);
     return Problem._(
       factor1: factor1,
       factor2: factor2,
       difficulty: difficulty,
       rows: rows,
+      sumColumns: sumColumns,
       steps: steps,
     );
   }
@@ -198,6 +250,7 @@ class Problem {
   final int factor2;
   final Difficulty difficulty;
   final List<ProblemRow> rows;
+  final List<SumColumn> sumColumns;
   final List<ProblemStep> steps;
 
   int get finalAnswer =>
@@ -221,7 +274,58 @@ class Problem {
     ];
   }
 
-  static List<ProblemStep> _buildSteps(List<ProblemRow> rows) {
+  /// Devuelve la cifra de [value] en la posición [position] (0 =
+  /// unidades, 1 = decenas, etc.), o 0 si [value] no llega a tener
+  /// tantas cifras.
+  static int _digitAt(int value, int position) {
+    int divisor = 1;
+    for (int i = 0; i < position; i++) {
+      divisor *= 10;
+    }
+    return (value ~/ divisor) % 10;
+  }
+
+  /// Arma, columna por columna (unidades, decenas, centenas, ...), la
+  /// suma de los dos renglones con su llevada — solo tiene sentido
+  /// (y solo se genera) cuando hay 2 renglones, es decir en la
+  /// dificultad de 2 cifras × 2 cifras.
+  static List<SumColumn> _buildSumColumns(List<ProblemRow> rows) {
+    if (rows.length <= 1) {
+      return <SumColumn>[];
+    }
+    final int row0 = rows[0].rowValue;
+    final int row1 = rows[1].rowValue;
+    final int total = row0 + row1;
+    final int columnCount = total.toString().length;
+
+    final List<SumColumn> columns = <SumColumn>[];
+    int carry = 0;
+    for (int i = 0; i < columnCount; i++) {
+      final int digit0 = _digitAt(row0, i);
+      final int digit1 = _digitAt(row1, i);
+      final int rawSum = digit0 + digit1 + carry;
+      final int writtenDigit = rawSum % 10;
+      final int carryOut = rawSum ~/ 10;
+      columns.add(
+        SumColumn(
+          columnIndex: i,
+          digit0: digit0,
+          digit1: digit1,
+          carryIn: carry,
+          rawSum: rawSum,
+          writtenDigit: writtenDigit,
+          carryOut: carryOut,
+        ),
+      );
+      carry = carryOut;
+    }
+    return columns;
+  }
+
+  static List<ProblemStep> _buildSteps(
+    List<ProblemRow> rows,
+    List<SumColumn> sumColumns,
+  ) {
     final List<ProblemStep> steps = <ProblemStep>[];
     for (int i = 0; i < rows.length; i++) {
       steps.add(
@@ -239,11 +343,13 @@ class Problem {
         ),
       );
     }
-    if (rows.length > 1) {
-      final int total =
-          rows.fold<int>(0, (int sum, ProblemRow r) => sum + r.rowValue);
+    for (final SumColumn column in sumColumns) {
       steps.add(
-        ProblemStep(kind: StepKind.finalSum, rowIndex: -1, expectedValue: total),
+        ProblemStep(
+          kind: StepKind.sumColumn,
+          columnIndex: column.columnIndex,
+          expectedValue: column.rawSum,
+        ),
       );
     }
     return steps;

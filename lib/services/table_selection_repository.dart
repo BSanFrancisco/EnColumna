@@ -2,29 +2,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/table_selection.dart';
 
-/// Guarda y lee, local en el dispositivo, qué tablas eligió practicar
-/// el usuario (ver [TableSelection]). Por defecto están todas
-/// seleccionadas, es decir sin ninguna restricción.
+/// Guarda y lee, local en el dispositivo, hasta qué tabla eligió
+/// practicar el usuario (ver [TableSelection]). Por defecto no hay
+/// restricción: hasta la tabla del 10.
 class TableSelectionRepository {
-  static const String _key = 'multiplicaciones_columna.selected_tables';
+  static const String _key = 'multiplicaciones_columna.selected_max_table';
 
-  Future<Set<int>> getSelected() async {
+  Future<int> getMaxTable() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String>? stored = prefs.getStringList(_key);
-    if (stored == null || stored.isEmpty) {
-      return TableSelection.defaultSelected();
+    final int? stored = prefs.getInt(_key);
+    if (stored == null ||
+        stored < TableSelection.options.first ||
+        stored > TableSelection.options.last) {
+      return TableSelection.defaultMaxTable;
     }
-    final Set<int> parsed = stored.map(int.parse).toSet();
-    // Por las dudas quedó guardada alguna vez una selección vacía:
-    // nunca se juega sin ninguna tabla elegida.
-    return parsed.isEmpty ? TableSelection.defaultSelected() : parsed;
+    return stored;
   }
 
-  Future<void> saveSelected(Set<int> selected) async {
+  Future<void> saveMaxTable(int maxTable) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _key,
-      selected.map((int t) => t.toString()).toList(),
-    );
+    await prefs.setInt(_key, maxTable);
   }
 }

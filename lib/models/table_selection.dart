@@ -1,17 +1,23 @@
-/// Las "tablas" que se pueden elegir para practicar, igual que en la
-/// pantalla de selección de Tablas de Multiplicar: del 2 al 10. La
-/// tabla del 10 queda incluida por mantener la misma pantalla, pero
-/// en esta app nunca hace falta para que una cuenta sea válida: las
-/// cifras que efectivamente se multiplican al resolver una cuenta en
-/// columna siempre van de 0 a 9 (son dígitos), así que "10" nunca
-/// puede coincidir con ninguna de ellas.
+/// La selección de tablas ahora es un solo número: "hasta qué tabla"
+/// se puede usar (2 a 10). Se pueden usar esa tabla y todas las
+/// inferiores — por ejemplo, elegir "hasta la tabla del 5" habilita
+/// las tablas del 2, 3, 4 y 5.
 class TableSelection {
   TableSelection._();
 
-  static const List<int> all = <int>[2, 3, 4, 5, 6, 7, 8, 9, 10];
+  /// Las opciones que aparecen en el menú desplegable.
+  static const List<int> options = <int>[2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  /// Selección por defecto: todas las tablas (sin ninguna
-  /// restricción), igual que se comportaba la app antes de que
-  /// existiera esta pantalla.
-  static Set<int> defaultSelected() => Set<int>.from(all);
+  /// Por defecto no hay restricción: hasta la tabla del 10 (todas).
+  static const int defaultMaxTable = 10;
+
+  /// Las tablas efectivamente habilitadas: [maxTable] y todas las
+  /// inferiores, empezando en 2. En esta app nunca hace falta que la
+  /// tabla del 10 coincida con ninguna cifra (las cifras que se
+  /// multiplican al resolver una cuenta en columna siempre van de 0 a
+  /// 9), así que elegir "hasta la tabla del 10" es lo mismo que no
+  /// tener ninguna restricción.
+  static Set<int> tablesUpTo(int maxTable) {
+    return <int>{for (int t = 2; t <= maxTable; t++) t};
+  }
 }
